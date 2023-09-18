@@ -76,7 +76,7 @@ class StateNumpy():
     def __init__(self):
         self.info = {}
         self.size = 0
-        self.val = np.array([], dtype=np.float)
+        self.val = np.array([], dtype=np.float64)
 
     def __setitem__(self, name: str, value: np.ndarray):
         if name in self.info.keys():

@@ -53,8 +53,8 @@ class Heli(gym.Env, EzPickle):
         self.heli_dyn = HelicopterDynamics(params, DT)
         self.wind_dyn = WindDynamics(params['ENV'], DT)
         self.heli_dyn.set_wind(self.wind_dyn.wind_mean_ned) # set mean wind as wind so that helicopter trims accordingly
-        self.observation_space = spaces.Box(-np.inf, np.inf, shape=(self.heli_dyn.n_obs,), dtype=np.float)
-        self.action_space = spaces.Box(-1, +1, (self.heli_dyn.n_act,), dtype=np.float)
+        self.observation_space = spaces.Box(-np.inf, np.inf, shape=(self.heli_dyn.n_obs,), dtype=np.float64)
+        self.action_space = spaces.Box(-1, +1, (self.heli_dyn.n_act,), dtype=np.float64)
         self.successed_time = 0 # time counter for successing task through time.
         self.set_max_time()
         self.set_target()

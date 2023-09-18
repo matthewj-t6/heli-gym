@@ -15,7 +15,7 @@ EPS         = 1e-4 # small value for divison by zero
 R2D         = 180/math.pi # Rad to deg
 D2R         = 1/R2D
 FT2MTR      = 0.3048 # ft to meter
-FLOAT_TYPE  = np.float
+FLOAT_TYPE  = np.float64
 
 class HelicopterDynamics(DynamicSystem):
 
@@ -52,15 +52,15 @@ class HelicopterDynamics(DynamicSystem):
         }
 
     def __register_states(self):
-        self._register_state('vi_mr', np.zeros(1, dtype=np.float))
-        self._register_state('vi_tr', np.zeros(1, dtype=np.float))
-        self._register_state('psi_mr', np.zeros(1, dtype=np.float))
-        self._register_state('psi_tr', np.zeros(1, dtype=np.float))
-        self._register_state('betas', np.zeros(2, dtype=np.float))
-        self._register_state('uvw', np.zeros(3, dtype=np.float))
-        self._register_state('pqr', np.zeros(3, dtype=np.float))
-        self._register_state('euler', np.zeros(3, dtype=np.float))
-        self._register_state('xyz', np.zeros(3, dtype=np.float))
+        self._register_state('vi_mr', np.zeros(1, dtype=np.float64))
+        self._register_state('vi_tr', np.zeros(1, dtype=np.float64))
+        self._register_state('psi_mr', np.zeros(1, dtype=np.float64))
+        self._register_state('psi_tr', np.zeros(1, dtype=np.float64))
+        self._register_state('betas', np.zeros(2, dtype=np.float64))
+        self._register_state('uvw', np.zeros(3, dtype=np.float64))
+        self._register_state('pqr', np.zeros(3, dtype=np.float64))
+        self._register_state('euler', np.zeros(3, dtype=np.float64))
+        self._register_state('xyz', np.zeros(3, dtype=np.float64))
               
     def reset(self, trim_cond={}):
         self.state = self.init_state
@@ -140,10 +140,10 @@ class HelicopterDynamics(DynamicSystem):
         #print(self.HELI['IX'])
         self.HELI['I'] = np.array([ [self.HELI['IX']     ,   0.0                 ,   -self.HELI['IXZ']], 
                                     [0.0                 ,   self.HELI['IY']     ,   0.0             ],
-                                    [-self.HELI['IXZ']   ,   0.0                 ,   self.HELI['IZ'] ] ], dtype=np.float)
+                                    [-self.HELI['IXZ']   ,   0.0                 ,   self.HELI['IZ'] ] ], dtype=np.float64)
         self.HELI['IINV'] = np.linalg.inv(self.HELI['I'])
 
-    def set_wind(self, wind_ned: np.ndarray = np.zeros(3, np.float)):
+    def set_wind(self, wind_ned: np.ndarray = np.zeros(3, np.float64)):
         # wind velocity in earth frame:
         self.WIND_NED = wind_ned
 
@@ -215,7 +215,7 @@ class HelicopterDynamics(DynamicSystem):
             v_adv_2/self.MR['V_TIP']*(coll+0.5*self.MR['TWST']) # z-axis vel re blade (equivalent)
         
         thrust_mr = (wb - vi_mr[0]) * rho*self.MR['COEF_TH']
-        vi_mr_dot = np.zeros(1, dtype=np.float)
+        vi_mr_dot = np.zeros(1, dtype=np.float64)
         vi_mr_dot[0] = 0.75*math.pi/self.MR['R']*(thrust_mr/(2*math.pi*rho*self.MR['R']*self.MR['R']) - vi_mr[0]*math.sqrt(v_adv_2+(wr-vi_mr[0])**2))
 
         # MR induced flow power consumption
@@ -239,12 +239,12 @@ class HelicopterDynamics(DynamicSystem):
         wake_fn = 1.0 if (math.fabs(uvw_air[0]) > self.HELI['VTRANS']) else 0.0
         a_sum = betas[1]-lat+KC*betas[0]+DB1DV*uvw_air[1]*(1+wake_fn)
         b_sum = betas[0]+lon-KC*betas[1]+DA1DU*uvw_air[0]*(1+2*wake_fn)
-        betas_dot = np.zeros(2, dtype=np.float)
+        betas_dot = np.zeros(2, dtype=np.float64)
         betas_dot[0] = -ITB*b_sum-ITB2_OM*a_sum-pqr[1]
         betas_dot[1] = -ITB*a_sum+ITB2_OM*b_sum-pqr[0]
 
         ### Transmission dynamics of MR
-        psi_mr_dot = np.zeros(1, dtype=np.float)
+        psi_mr_dot = np.zeros(1, dtype=np.float64)
         psi_mr_dot[0] = self.MR['OMEGA']
 
         ### Compute main rotor force and moment components
@@ -255,8 +255,8 @@ class HelicopterDynamics(DynamicSystem):
         M_MR=Z_MR*self.MR['D']-X_MR*self.MR['H']+DL_DB1*betas[0]+DL_DA1*(-betas[1]+lat-self.MR['K1']*betas[0])
         N_MR=torque_mr
 
-        force_mr = np.array([X_MR,Y_MR,Z_MR], dtype=np.float)
-        moment_mr = np.array([L_MR, M_MR, N_MR], dtype=np.float)
+        force_mr = np.array([X_MR,Y_MR,Z_MR], dtype=np.float64)
+        moment_mr = np.array([L_MR, M_MR, N_MR], dtype=np.float64)
         return force_mr, moment_mr, power_mr, betas_dot, vi_mr_dot, psi_mr_dot
 
     def _calc_tr_fm(self, rho, pedal, uvw_air, pqr, vi_tr, psi_tr):
@@ -270,12 +270,12 @@ class HelicopterDynamics(DynamicSystem):
             v_adv_2/self.TR['V_TIP']*(pedal+0.5*self.TR['TWST'])# vel re blade plane (equivalent)
         
         thrust_tr = (vb - vi_tr[0])*rho*self.TR['COEF_TH']
-        vi_tr_dot = np.zeros(1, dtype=np.float)
+        vi_tr_dot = np.zeros(1, dtype=np.float64)
         vi_tr_dot[0] = 0.75*math.pi/self.TR['R']*(thrust_tr/(2*math.pi*rho*self.TR['R']**2) - vi_tr[0]*math.sqrt(v_adv_2+(vr-vi_tr[0])**2))
         vi_tr_dot[0] *= 0.5 # slow down inflow dynamics due to numerical unstability.
 
         ### Transmission dynamics of TR
-        psi_tr_dot = np.zeros(1, dtype=np.float)
+        psi_tr_dot = np.zeros(1, dtype=np.float64)
         psi_tr_dot[0] = self.TR['OMEGA']
 
         power_tr = thrust_tr*(vi_tr[0]-vr)
@@ -285,8 +285,8 @@ class HelicopterDynamics(DynamicSystem):
         Y_TR=thrust_tr
         L_TR=Y_TR*self.TR['H']
         N_TR=-Y_TR*self.TR['D']
-        force_tr = np.array([0,Y_TR,0], dtype=np.float)
-        moment_tr = np.array([L_TR, 0, N_TR], dtype=np.float)
+        force_tr = np.array([0,Y_TR,0], dtype=np.float64)
+        moment_tr = np.array([L_TR, 0, N_TR], dtype=np.float64)
         return force_tr, moment_tr, power_tr, vi_tr_dot, psi_tr_dot
 
     def _calc_fus_fm(self, rho, uvw_air, vi_mr):
@@ -305,8 +305,8 @@ class HelicopterDynamics(DynamicSystem):
         # Fuselage power consumption
         power_parasite=-X_FUS*uvw_air[0]-Y_FUS*uvw_air[1]-Z_FUS*wa_fus
         power_fus=power_parasite
-        force_fus = np.array([X_FUS,Y_FUS,Z_FUS], dtype=np.float)
-        moment_fus = np.array([L_FUS, M_FUS, 0], dtype=np.float)        
+        force_fus = np.array([X_FUS,Y_FUS,Z_FUS], dtype=np.float64)
+        moment_fus = np.array([L_FUS, M_FUS, 0], dtype=np.float64)        
         return force_fus, moment_fus, power_fus
 
     def _calc_ht_fm(self, rho, uvw_air, pqr, vi_mr):
@@ -330,8 +330,8 @@ class HelicopterDynamics(DynamicSystem):
             Z_HT=0.5*rho*(self.HT['ZUU']*math.fabs(uvw_air[0])*uvw_air[0]+self.HT['ZUW']*math.fabs(uvw_air[0])*wa_ht) # circulation
         
         M_HT = Z_HT*self.HT['D'] # pitching moment
-        force_ht = np.array([0,0,Z_HT], dtype=np.float)
-        moment_ht = np.array([0, M_HT, 0], dtype=np.float)        
+        force_ht = np.array([0,0,Z_HT], dtype=np.float64)
+        moment_ht = np.array([0, M_HT, 0], dtype=np.float64)        
         return force_ht, moment_ht
 
     def _calc_vt_fm(self, rho, uvw_air, pqr, vi_tr):
@@ -346,8 +346,8 @@ class HelicopterDynamics(DynamicSystem):
         
         L_VT=Y_VT*self.VT['H']
         N_VT=-Y_VT*self.VT['D']
-        force_vt = np.array([0,Y_VT,0], dtype=np.float)
-        moment_vt = np.array([L_VT, 0, N_VT], dtype=np.float)        
+        force_vt = np.array([0,Y_VT,0], dtype=np.float64)
+        moment_vt = np.array([L_VT, 0, N_VT], dtype=np.float64)        
         return force_vt, moment_vt
 
     def _calc_wn_fm(self, rho, uvw_air, vi_mr):
@@ -368,8 +368,8 @@ class HelicopterDynamics(DynamicSystem):
             X_WN=-0.5*rho/math.pi/vta_wn**2*(self.WN['ZUU']*uvw_air[0]*uvw_air[0]+self.WN['ZUW']*uvw_air[0]*wa_wn)**2 # ? induced drag
         
         power_wn=math.fabs(X_WN*uvw_air[0]) # wing power
-        force_wn = np.array([X_WN,0,Z_WN], dtype=np.float)
-        moment_wn = np.array([0, 0, 0], dtype=np.float)        
+        force_wn = np.array([X_WN,0,Z_WN], dtype=np.float64)
+        moment_wn = np.array([0, 0, 0], dtype=np.float64)        
         return force_wn, moment_wn, power_wn
 
     def dynamics(self, state, action, set_observation=False):
@@ -492,7 +492,7 @@ class HelicopterDynamics(DynamicSystem):
         self.last_action = np.zeros(4)  
 
         n_vars = 16
-        y_target = np.zeros(n_vars, dtype=np.float)
+        y_target = np.zeros(n_vars, dtype=np.float64)
         y_target[-4] = params['yaw_rate']
         y_target[-3:] = np.array(params['ned_vel'], dtype=FLOAT_TYPE)/self.MR['R']
         uvw0 = np.array(params['ned_vel'], dtype=FLOAT_TYPE)/self.MR['V_TIP']
@@ -501,7 +501,7 @@ class HelicopterDynamics(DynamicSystem):
             0, 0, y_target[-4], # pqr
             -0.01, 0.01, # phi, theta
             0.0, 0.0, 0.0, 0.0, # actions
-            ], dtype=np.float)
+            ], dtype=np.float64)
 
         y = self.__trim_fcn(x)
         tol = (y-y_target).transpose()@(y-y_target)
